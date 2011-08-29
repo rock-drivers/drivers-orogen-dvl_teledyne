@@ -23,6 +23,7 @@ task_context "Task" do
     output_port "status", "dvl_teledyne/Status"
     output_port "cell_samples", "dvl_teledyne/CellReadings"
     output_port "bottom_tracking_samples", "dvl_teledyne/BottomTracking"
+    output_port "speed_samples", "base/samples/RigidBodyState"
 
     # Timestamp Estimator
     #

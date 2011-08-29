@@ -3,6 +3,7 @@
 #include "Task.hpp"
 #include <dvl_teledyne/Driver.hpp>
 #include <aggregator/TimestampEstimator.hpp>
+#include <base/float.h>
 
 using namespace dvl_teledyne;
 
@@ -96,6 +97,28 @@ void Task::processIO()
     {
         mDriver->bottomTracking.time = time;
         _bottom_tracking_samples.write(mDriver->bottomTracking);
+    }
+
+    // Extract RigidBodyState data and write it to speed_samples
+    //
+    // This is possible in all but BEAM coordinate mode
+    if (mDriver->outputConf.coordinate_system != BEAM && !base::isUnknown<float>(mDriver->bottomTracking.velocity[0]))
+    {
+        base::samples::RigidBodyState rbs;
+        rbs.invalidate();
+        rbs.time = time;
+
+        rbs.orientation  = mDriver->status.orientation;
+        rbs.velocity.x() = mDriver->bottomTracking.velocity[1];
+        rbs.velocity.y() = -mDriver->bottomTracking.velocity[0];
+        rbs.velocity.z() = mDriver->bottomTracking.velocity[2];
+
+        double var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
+        rbs.cov_velocity(0, 0) = var;
+        rbs.cov_velocity(1, 1) = var;
+        rbs.cov_velocity(2, 2) = var;
+
+        _speed_samples.write(rbs);
     }
 
     _timestamp_estimator_status.write(mTimestamper->getStatus());
