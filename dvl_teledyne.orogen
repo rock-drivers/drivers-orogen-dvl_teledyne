@@ -18,7 +18,11 @@ task_context "Task" do
 
     property('config_file', '/std/string').
         doc "path to a text file containing DVL commands"
-    property 'info', 'dvl_teledyne/DeviceInfo'
+    property('output_configuration', 'dvl_teledyne/OutputConfiguration').
+        doc "configuration of the output coordinate system"
+
+    property('info', 'dvl_teledyne/DeviceInfo').
+        doc "device information as read from the DVL (read-only)"
 
     output_port "status", "dvl_teledyne/Status"
     output_port "cell_samples", "dvl_teledyne/CellReadings"

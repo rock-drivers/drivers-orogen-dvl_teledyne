@@ -13,6 +13,12 @@ Task::Task(std::string const& name)
     , mTimestamper(0)
     , mLastSeq(-1)
 {
+    OutputConfiguration default_config;
+    default_config.coordinate_system = INSTRUMENT;
+    default_config.use_attitude = true;
+    default_config.use_3beam_solution = true;
+    default_config.use_bin_mapping = false;
+    _output_configuration.set(default_config);
 }
 
 Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
@@ -21,6 +27,12 @@ Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
     , mTimestamper(0)
     , mLastSeq(-1)
 {
+    OutputConfiguration default_config;
+    default_config.coordinate_system = INSTRUMENT;
+    default_config.use_attitude = true;
+    default_config.use_3beam_solution = true;
+    default_config.use_bin_mapping = false;
+    _output_configuration.set(default_config);
 }
 
 Task::~Task()
@@ -40,11 +52,16 @@ bool Task::configureHook()
     if (!_io_port.get().empty())
     {
         mDriver->open(_io_port.get());
-        // We can configure only if in direct access mode
+        mDriver->setConfigurationMode();
+
+        // Send the configuration first, so that it gets overriden in the config
+        // file (if people want to do it in the config file)
+        mDriver->setOutputConfiguration(_output_configuration.get());
+
+        // We can configure only if in direct access mode, i.e. send the file
+        // only if _io_port is set
         if (!_config_file.get().empty())
             mDriver->sendConfigurationFile(_config_file.get());
-        else
-            mDriver->setConfigurationMode();
     }
 
     delete mTimestamper;
