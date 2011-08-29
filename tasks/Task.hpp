@@ -6,11 +6,13 @@
 #include "dvl_teledyne/TaskBase.hpp"
 
 namespace dvl_teledyne {
+    class Driver;
     class Task : public TaskBase
     {
 	friend class TaskBase;
     protected:
 
+        Driver* mDriver;
 
 
     public:
@@ -32,14 +34,19 @@ namespace dvl_teledyne {
          *     ...
          *   end
          */
-        // bool configureHook();
+        bool configureHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Stopped to Running. If it returns false, then the component will
          * stay in Stopped. Otherwise, it goes into Running and updateHook()
          * will be called.
          */
-        // bool startHook();
+        bool startHook();
+
+        /** Called by iodrivers_base::Task when some data is available for
+         * processing
+         */
+        void processIO();
 
         /** This hook is called by Orocos when the component is in the Running
          * state, at each activity step. Here, the activity gives the "ticks"
@@ -68,7 +75,7 @@ namespace dvl_teledyne {
         /** This hook is called by Orocos when the state machine transitions
          * from Running to Stopped after stop() has been called.
          */
-        // void stopHook();
+        void stopHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Stopped to PreOperational, requiring the call to configureHook()

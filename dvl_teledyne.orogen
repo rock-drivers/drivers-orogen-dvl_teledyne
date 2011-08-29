@@ -13,6 +13,10 @@ using_task_library "iodrivers_base"
 task_context "Task" do
     subclasses "iodrivers_base::Task"
 
+    property('config_file', '/std/string').
+        doc "path to a text file containing DVL commands"
+    property 'info', 'dvl_teledyne/DeviceInfo'
+
     output_port "status", "dvl_teledyne/Status"
     output_port "cell_samples", "dvl_teledyne/CellReadings"
     output_port "bottom_tracking_samples", "dvl_teledyne/BottomTracking"
