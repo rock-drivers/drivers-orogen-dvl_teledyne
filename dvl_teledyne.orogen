@@ -4,6 +4,9 @@ version "0.1"
 using_library "dvl_teledyne"
 import_types_from "dvl_teledyne/PD0Messages.hpp"
 
+using_library "aggregator"
+import_types_from 'aggregator'
+
 using_task_library "iodrivers_base"
 
 # Declare a new task context (i.e., a component)
@@ -20,5 +23,11 @@ task_context "Task" do
     output_port "status", "dvl_teledyne/Status"
     output_port "cell_samples", "dvl_teledyne/CellReadings"
     output_port "bottom_tracking_samples", "dvl_teledyne/BottomTracking"
+
+    # Timestamp Estimator
+    #
+    # No need for a sample_loss_threshold property, as the DVL report sample
+    # indexes
+    output_port "timestamp_estimator_status", "/aggregator/TimestampEstimatorStatus"
 end
 

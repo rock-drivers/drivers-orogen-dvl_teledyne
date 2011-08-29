@@ -2,18 +2,23 @@
 
 #include "Task.hpp"
 #include <dvl_teledyne/Driver.hpp>
+#include <aggregator/TimestampEstimator.hpp>
 
 using namespace dvl_teledyne;
 
 Task::Task(std::string const& name)
     : TaskBase(name)
     , mDriver(0)
+    , mTimestamper(0)
+    , mLastSeq(-1)
 {
 }
 
 Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
     : TaskBase(name, engine)
     , mDriver(0)
+    , mTimestamper(0)
+    , mLastSeq(-1)
 {
 }
 
@@ -40,6 +45,11 @@ bool Task::configureHook()
         else
             mDriver->setConfigurationMode();
     }
+
+    delete mTimestamper;
+    mTimestamper = new aggregator::TimestampEstimator(
+            base::Time::fromSeconds(100));
+
     setDriver(mDriver);
 
     if (! TaskBase::configureHook())
@@ -53,16 +63,42 @@ bool Task::startHook()
 
     // Start pinging using the current configuration
     mDriver->startAcquisition();
+    mTimestamper->reset();
+    mLastSeq = -1;
     return true;
 }
 
 void Task::processIO()
 {
     mDriver->read();
+    _info.set(mDriver->deviceInfo);
 
-    _info.set(mDriver->mDeviceInfo);
-    _status.write(mDriver->mStatus);
-    _bottom_tracking_samples.write(mDriver->mBottomTracking);
+    // Compute the data timestamp
+    base::Time base_time = base::Time::now();
+    int64_t seq = mDriver->status.seq;
+    if (mLastSeq < 0)
+        mGlobalSeq = seq;
+    else if (mLastSeq > seq) // wrapped around
+        mGlobalSeq += static_cast<uint64_t>((1 << 24) - seq) + mLastSeq;
+    else
+        mGlobalSeq += seq - mLastSeq;
+    mLastSeq = seq;
+    base::Time time = mTimestamper->update(base_time, mGlobalSeq);
+
+    // Update the timestamp on each of the fields, and write it on our outputs
+    mDriver->status.time = time;
+    _status.write(mDriver->status);
+
+    if (!mDriver->cellReadings.time.isNull())
+        mDriver->cellReadings.time = time;
+
+    if (!mDriver->bottomTracking.time.isNull())
+    {
+        mDriver->bottomTracking.time = time;
+        _bottom_tracking_samples.write(mDriver->bottomTracking);
+    }
+
+    _timestamp_estimator_status.write(mTimestamper->getStatus());
 }
 
 // void Task::errorHook()

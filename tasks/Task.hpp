@@ -5,6 +5,10 @@
 
 #include "dvl_teledyne/TaskBase.hpp"
 
+namespace aggregator {
+    class TimestampEstimator;
+}
+
 namespace dvl_teledyne {
     class Driver;
     class Task : public TaskBase
@@ -13,7 +17,12 @@ namespace dvl_teledyne {
     protected:
 
         Driver* mDriver;
+        aggregator::TimestampEstimator* mTimestamper;
 
+        // The sequence number without wraparounds
+        uint64_t mGlobalSeq;
+        // The last received sequence number
+        int32_t mLastSeq;
 
     public:
         Task(std::string const& name = "dvl_teledyne::Task");

@@ -4,5 +4,6 @@
   </description>
   <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
   <depend package="drivers/orogen/iodrivers_base" />
+  <depend package="drivers/orogen/aggregator" />
   <depend package="drivers/dvl_teledyne" />
 </package>
