@@ -121,21 +121,31 @@ void Task::processIO()
     // This is possible in all but BEAM coordinate mode
     if (mDriver->outputConf.coordinate_system != BEAM && !base::isUnknown<float>(mDriver->bottomTracking.velocity[0]))
     {
-        base::samples::RigidBodyState rbs;
-        rbs.invalidate();
-        rbs.time = time;
+	//check for nans 
+	if( mDriver->bottomTracking.velocity[0] == mDriver->bottomTracking.velocity[0] && 
+	    mDriver->bottomTracking.velocity[1] == mDriver->bottomTracking.velocity[1] && 
+	    mDriver->bottomTracking.velocity[2] == mDriver->bottomTracking.velocity[2] && 
+	    mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ) 
+	{
+	    base::samples::RigidBodyState rbs;
+	    rbs.invalidate();
+	    rbs.time = time;
 
-        rbs.orientation  = mDriver->status.orientation;
-        rbs.velocity.x() = mDriver->bottomTracking.velocity[1];
-        rbs.velocity.y() = -mDriver->bottomTracking.velocity[0];
-        rbs.velocity.z() = mDriver->bottomTracking.velocity[2];
+	    rbs.orientation  = mDriver->status.orientation;
+	    rbs.velocity.x() = mDriver->bottomTracking.velocity[0];
+	    rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
+	    rbs.velocity.z() = mDriver->bottomTracking.velocity[2];
+	    
+	    double var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
+	    Eigen::Matrix3d cov; 
+	    cov.setZero(); 
+	    cov(0, 0) = var;
+	    cov(1, 1) = var;
+	    cov(2, 2) = var;
+	    rbs.cov_velocity = cov; 
 
-        double var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
-        rbs.cov_velocity(0, 0) = var;
-        rbs.cov_velocity(1, 1) = var;
-        rbs.cov_velocity(2, 2) = var;
-
-        _speed_samples.write(rbs);
+	    _velocity_samples.write(rbs);
+	}
     }
 
     _timestamp_estimator_status.write(mTimestamper->getStatus());
