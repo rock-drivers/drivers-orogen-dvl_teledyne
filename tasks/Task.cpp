@@ -134,7 +134,7 @@ void Task::processIO()
 	    rbs.orientation  = mDriver->status.orientation;
 	    rbs.velocity.x() = mDriver->bottomTracking.velocity[0];
 	    rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
-	    rbs.velocity.z() = mDriver->bottomTracking.velocity[2];
+	    rbs.velocity.z() = -mDriver->bottomTracking.velocity[2];
 	    
 	    double var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
 	    Eigen::Matrix3d cov; 
