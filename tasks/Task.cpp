@@ -66,7 +66,7 @@ bool Task::configureHook()
 
     delete mTimestamper;
     mTimestamper = new aggregator::TimestampEstimator(
-            base::Time::fromSeconds(100));
+            base::Time::fromSeconds(100),base::Time::fromSeconds(1));
 
     setDriver(mDriver);
 
@@ -114,6 +114,10 @@ void Task::processIO()
     {
         mDriver->bottomTracking.time = time;
         _bottom_tracking_samples.write(mDriver->bottomTracking);
+    }
+    else
+    {
+	std::cerr << "dvl_orogen: no DVL data received" << std::endl;
     }
 
     // Extract RigidBodyState data and write it to speed_samples
