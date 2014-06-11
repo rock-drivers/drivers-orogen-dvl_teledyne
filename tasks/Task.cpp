@@ -128,8 +128,8 @@ void Task::processIO()
 	//check for nans 
 	if( mDriver->bottomTracking.velocity[0] == mDriver->bottomTracking.velocity[0] && 
 	    mDriver->bottomTracking.velocity[1] == mDriver->bottomTracking.velocity[1] && 
-	    mDriver->bottomTracking.velocity[2] == mDriver->bottomTracking.velocity[2] && 
-	    mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ) 
+	    mDriver->bottomTracking.velocity[2] == mDriver->bottomTracking.velocity[2])// && 
+	   // mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ) 
 	{
 	    base::samples::RigidBodyState rbs;
 	    rbs.invalidate();
@@ -140,8 +140,10 @@ void Task::processIO()
 	    rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
 	    rbs.velocity.z() = -mDriver->bottomTracking.velocity[2];
 	    
-	    double var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
-	    Eigen::Matrix3d cov; 
+            if(mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ){ 
+	        var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
+	    }
+            Eigen::Matrix3d cov; 
 	    cov.setZero(); 
 	    cov(0, 0) = var;
 	    cov(1, 1) = var;

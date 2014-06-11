@@ -24,6 +24,8 @@ namespace dvl_teledyne {
         // The last received sequence number
         int32_t mLastSeq;
 
+        double var;
+
     public:
         Task(std::string const& name = "dvl_teledyne::Task");
         Task(std::string const& name, RTT::ExecutionEngine* engine);
