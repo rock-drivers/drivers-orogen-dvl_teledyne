@@ -24,6 +24,11 @@ task_context "Task" do
     property('info', 'dvl_teledyne/DeviceInfo').
         doc "device information as read from the DVL (read-only)"
 
+    # Standard deviation override
+    property('sigma_override', 'double', 0.0).
+        doc("If sigma_override is a valid value greater than zero, it will").
+        doc("be used to override the covariance of the velocity measurements.")
+
     output_port "status", "dvl_teledyne/Status"
     output_port "cell_samples", "dvl_teledyne/CellReadings"
     output_port "bottom_tracking_samples", "dvl_teledyne/BottomTracking"

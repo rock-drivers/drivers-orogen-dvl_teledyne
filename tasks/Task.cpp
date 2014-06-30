@@ -125,32 +125,43 @@ void Task::processIO()
     // This is possible in all but BEAM coordinate mode
     if (mDriver->outputConf.coordinate_system != BEAM && !base::isUnknown<float>(mDriver->bottomTracking.velocity[0]))
     {
+        // set variance unknown
+        var = base::unknown<float>();
+
 	//check for nans 
 	if( mDriver->bottomTracking.velocity[0] == mDriver->bottomTracking.velocity[0] && 
 	    mDriver->bottomTracking.velocity[1] == mDriver->bottomTracking.velocity[1] && 
-	    mDriver->bottomTracking.velocity[2] == mDriver->bottomTracking.velocity[2])// && 
-	   // mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ) 
+	    mDriver->bottomTracking.velocity[2] == mDriver->bottomTracking.velocity[2])
 	{
-	    base::samples::RigidBodyState rbs;
-	    rbs.invalidate();
-	    rbs.time = time;
-
-	    rbs.orientation  = mDriver->status.orientation;
-	    rbs.velocity.x() = mDriver->bottomTracking.velocity[0];
-	    rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
-	    rbs.velocity.z() = -mDriver->bottomTracking.velocity[2];
-	    
-            if(mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] ){ 
+            if(!base::isNaN<double>(_sigma_override.get()) && _sigma_override.get() != 0.0)
+            {
+                var = pow(_sigma_override.get(), 2.0);
+            }
+            else if(mDriver->bottomTracking.velocity[3] == mDriver->bottomTracking.velocity[3] )
+            { 
 	        var = mDriver->bottomTracking.velocity[3] * mDriver->bottomTracking.velocity[3];
 	    }
-            Eigen::Matrix3d cov; 
-	    cov.setZero(); 
-	    cov(0, 0) = var;
-	    cov(1, 1) = var;
-	    cov(2, 2) = var;
-	    rbs.cov_velocity = cov; 
 
-	    _velocity_samples.write(rbs);
+            if(!base::isUnknown<float>(var))
+            {
+                base::samples::RigidBodyState rbs;
+                rbs.invalidate();
+                rbs.time = time;
+
+                rbs.orientation  = mDriver->status.orientation;
+                rbs.velocity.x() = mDriver->bottomTracking.velocity[0];
+                rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
+                rbs.velocity.z() = -mDriver->bottomTracking.velocity[2];
+
+                Eigen::Matrix3d cov; 
+                cov.setZero(); 
+                cov(0, 0) = var;
+                cov(1, 1) = var;
+                cov(2, 2) = var;
+                rbs.cov_velocity = cov; 
+
+                _velocity_samples.write(rbs);
+            }
 	}
     }
 
