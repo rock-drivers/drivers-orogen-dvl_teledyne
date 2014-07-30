@@ -114,6 +114,26 @@ void Task::processIO()
     {
         mDriver->bottomTracking.time = time;
         _bottom_tracking_samples.write(mDriver->bottomTracking);
+
+        if(
+                !base::isUnknown<float>(mDriver->bottomTracking.range[0]) &&
+                !base::isUnknown<float>(mDriver->bottomTracking.range[1]) &&
+                !base::isUnknown<float>(mDriver->bottomTracking.range[2]) &&
+                !base::isUnknown<float>(mDriver->bottomTracking.range[3])
+          ){
+                //Taking the Average distance to the bottom if all readings are valid
+                double avg = (mDriver->bottomTracking.range[0] +
+                              mDriver->bottomTracking.range[1] +
+                              mDriver->bottomTracking.range[2] +
+                              mDriver->bottomTracking.range[3])/4.0;
+                
+                avg *= cos(30.0/180.0/M_PI); //30degree angle of the pistons, convert to distance
+                base::samples::RigidBodyState rbs;
+                rbs.invalidate();
+                rbs.position[2] = avg;
+                rbs.cov_position(2,2) = _variance_ground_distance.get();
+                _ground_distance.write(rbs);
+        }
     }
     else
     {

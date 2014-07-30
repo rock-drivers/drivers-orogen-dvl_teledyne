@@ -34,6 +34,12 @@ task_context "Task" do
     output_port "bottom_tracking_samples", "dvl_teledyne/BottomTracking"
     output_port "velocity_samples", "base/samples/RigidBodyState"
 
+    #avg value of the ground distance between all 4 DVL Rays
+    output_port "ground_distance", "base/samples/RigidBodyState"
+
+    #Default variance of avg ground-distance readings
+    property("variance_ground_distance","/double",0.1)
+
     # Timestamp Estimator
     #
     # No need for a sample_loss_threshold property, as the DVL report sample
