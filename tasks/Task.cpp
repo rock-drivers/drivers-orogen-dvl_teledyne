@@ -115,6 +115,9 @@ void Task::processIO()
         mDriver->bottomTracking.time = time;
         _bottom_tracking_samples.write(mDriver->bottomTracking);
 
+        base::samples::RigidBodyState rbs_ground_distance;
+        rbs_ground_distance.time = time;
+        rbs_ground_distance.invalidate();
         if(
                 !base::isUnknown<float>(mDriver->bottomTracking.range[0]) &&
                 !base::isUnknown<float>(mDriver->bottomTracking.range[1]) &&
@@ -128,12 +131,12 @@ void Task::processIO()
                               mDriver->bottomTracking.range[3])/4.0;
                 
                 avg *= cos(30.0/180.0/M_PI); //30degree angle of the pistons, convert to distance
-                base::samples::RigidBodyState rbs;
-                rbs.invalidate();
-                rbs.position[2] = avg;
-                rbs.cov_position(2,2) = _variance_ground_distance.get();
-                _ground_distance.write(rbs);
+                base::samples::RigidBodyState rbs_ground_distance;
+                rbs_ground_distance.position[2] = avg;
+                rbs_ground_distance.cov_position(2,2) = _variance_ground_distance.get();
         }
+        //Write ground distance even we have no lock, then with NaN information
+        _ground_distance.write(rbs_ground_distance);
     }
     else
     {
@@ -145,6 +148,9 @@ void Task::processIO()
     // This is possible in all but BEAM coordinate mode
     if (mDriver->outputConf.coordinate_system != BEAM && !base::isUnknown<float>(mDriver->bottomTracking.velocity[0]))
     {
+        base::samples::RigidBodyState rbs_velocity;
+        rbs_velocity.invalidate();
+        rbs_velocity.time = time;
         // set variance unknown
         var = base::unknown<float>();
 
@@ -164,25 +170,25 @@ void Task::processIO()
 
             if(!base::isUnknown<float>(var))
             {
-                base::samples::RigidBodyState rbs;
-                rbs.invalidate();
-                rbs.time = time;
 
-                rbs.orientation  = mDriver->status.orientation;
-                rbs.velocity.x() = mDriver->bottomTracking.velocity[0];
-                rbs.velocity.y() = mDriver->bottomTracking.velocity[1];
-                rbs.velocity.z() = -mDriver->bottomTracking.velocity[2];
+                rbs_velocity.orientation  = mDriver->status.orientation;
+                rbs_velocity.velocity.x() = mDriver->bottomTracking.velocity[0];
+                rbs_velocity.velocity.y() = mDriver->bottomTracking.velocity[1];
+                rbs_velocity.velocity.z() = -mDriver->bottomTracking.velocity[2];
 
                 Eigen::Matrix3d cov; 
                 cov.setZero(); 
                 cov(0, 0) = var;
                 cov(1, 1) = var;
                 cov(2, 2) = var;
-                rbs.cov_velocity = cov; 
+                rbs_velocity.cov_velocity = cov; 
 
-                _velocity_samples.write(rbs);
+                _velocity_samples.write(rbs_velocity);
             }
-	}
+	}else{
+            //Write this command even we have no bottom-lock indicating it with NaN readings
+            _velocity_samples.write(rbs_velocity);
+        }
     }
 
     _timestamp_estimator_status.write(mTimestamper->getStatus());
