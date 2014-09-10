@@ -119,10 +119,10 @@ void Task::processIO()
         rbs_ground_distance.time = time;
         rbs_ground_distance.invalidate();
         if(
-                !base::isUnknown<float>(mDriver->bottomTracking.range[0]) &&
-                !base::isUnknown<float>(mDriver->bottomTracking.range[1]) &&
-                !base::isUnknown<float>(mDriver->bottomTracking.range[2]) &&
-                !base::isUnknown<float>(mDriver->bottomTracking.range[3])
+                (!base::isUnknown<float>(mDriver->bottomTracking.range[0])) &&
+                (!base::isUnknown<float>(mDriver->bottomTracking.range[1])) &&
+                (!base::isUnknown<float>(mDriver->bottomTracking.range[2])) &&
+                (!base::isUnknown<float>(mDriver->bottomTracking.range[3]))
           ){
                 //Taking the Average distance to the bottom if all readings are valid
                 double avg = (mDriver->bottomTracking.range[0] +
@@ -130,8 +130,7 @@ void Task::processIO()
                               mDriver->bottomTracking.range[2] +
                               mDriver->bottomTracking.range[3])/4.0;
                 
-                avg *= cos(30.0/180.0/M_PI); //30degree angle of the pistons, convert to distance
-                base::samples::RigidBodyState rbs_ground_distance;
+                avg *= cos(30.0/180.0*M_PI); //30degree angle of the pistons, convert to distance
                 rbs_ground_distance.position[2] = avg;
                 rbs_ground_distance.cov_position(2,2) = _variance_ground_distance.get();
         }
