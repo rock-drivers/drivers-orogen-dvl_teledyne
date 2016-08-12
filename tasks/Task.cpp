@@ -3,7 +3,7 @@
 #include "Task.hpp"
 #include <dvl_teledyne/Driver.hpp>
 #include <aggregator/TimestampEstimator.hpp>
-#include <base/float.h>
+#include <base/Float.hpp>
 
 using namespace dvl_teledyne;
 
