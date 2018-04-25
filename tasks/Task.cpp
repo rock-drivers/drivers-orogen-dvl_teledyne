@@ -112,6 +112,10 @@ void Task::processIO()
 
     if (!mDriver->bottomTracking.time.isNull())
     {
+        // Invert z-axis in order to convert from the left handed frame of the DVL (with z pointing down)
+        // to the right handed frame (with z pointing up).
+        mDriver->bottomTracking.velocity[2] = -1. * mDriver->bottomTracking.velocity[2];
+
         mDriver->bottomTracking.time = time;
         _bottom_tracking_samples.write(mDriver->bottomTracking);
 
@@ -173,7 +177,7 @@ void Task::processIO()
                 rbs_velocity.orientation  = mDriver->status.orientation;
                 rbs_velocity.velocity.x() = mDriver->bottomTracking.velocity[0];
                 rbs_velocity.velocity.y() = mDriver->bottomTracking.velocity[1];
-                rbs_velocity.velocity.z() = -mDriver->bottomTracking.velocity[2];
+                rbs_velocity.velocity.z() = mDriver->bottomTracking.velocity[2];
 
                 Eigen::Matrix3d cov; 
                 cov.setZero(); 
