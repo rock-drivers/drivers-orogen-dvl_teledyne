@@ -49,6 +49,8 @@ bool Task::configureHook()
 {
     delete mDriver;
     mDriver = new dvl_teledyne::Driver;
+    mDriver->setReadTimeout(_io_read_timeout.get());
+    mDriver->setWriteTimeout(_io_write_timeout.get());
     if (!_io_port.get().empty())
     {
         mDriver->open(_io_port.get());
