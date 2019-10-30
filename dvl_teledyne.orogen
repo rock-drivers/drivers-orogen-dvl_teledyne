@@ -3,6 +3,7 @@ version "0.1"
 
 using_library "dvl_teledyne"
 import_types_from "dvl_teledyne/PD0Messages.hpp"
+import_types_from "dvl_teledyne/Config.hpp"
 
 using_library "aggregator"
 import_types_from 'aggregator'
@@ -16,10 +17,10 @@ using_task_library "iodrivers_base"
 task_context "Task" do
     subclasses "iodrivers_base::Task"
 
+    property('config', 'dvl_teledyne/Config').
+        doc "configuration struct holding a complete set of settings for the dvl"
     property('config_file', '/std/string').
         doc "path to a text file containing DVL commands"
-    property('output_configuration', 'dvl_teledyne/OutputConfiguration').
-        doc "configuration of the output coordinate system"
 
     property('info', 'dvl_teledyne/DeviceInfo').
         doc "device information as read from the DVL (read-only)"
