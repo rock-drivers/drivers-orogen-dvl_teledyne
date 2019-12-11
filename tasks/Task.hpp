@@ -3,6 +3,7 @@
 #ifndef DVL_TELEDYNE_TASK_TASK_HPP
 #define DVL_TELEDYNE_TASK_TASK_HPP
 
+#include <memory>
 #include "dvl_teledyne/TaskBase.hpp"
 
 namespace aggregator {
@@ -16,7 +17,7 @@ namespace dvl_teledyne {
 	friend class TaskBase;
     protected:
 
-        Driver* mDriver;
+        std::unique_ptr<Driver> mDriver;
         aggregator::TimestampEstimator* mTimestamper;
 
         // The sequence number without wraparounds
@@ -92,7 +93,7 @@ namespace dvl_teledyne {
          * from Stopped to PreOperational, requiring the call to configureHook()
          * before calling start() again.
          */
-        // void cleanupHook();
+        void cleanupHook();
     };
 }
 

@@ -2,6 +2,7 @@
 
 #include "Task.hpp"
 #include <dvl_teledyne/Driver.hpp>
+#include <iodrivers_base/ConfigureGuard.hpp>
 #include <aggregator/TimestampEstimator.hpp>
 #include <base/Float.hpp>
 
@@ -9,30 +10,16 @@ using namespace dvl_teledyne;
 
 Task::Task(std::string const& name)
     : TaskBase(name)
-    , mDriver(0)
     , mTimestamper(0)
     , mLastSeq(-1)
 {
-    OutputConfiguration default_config;
-    default_config.coordinate_system = INSTRUMENT;
-    default_config.use_attitude = true;
-    default_config.use_3beam_solution = true;
-    default_config.use_bin_mapping = false;
-    _output_configuration.set(default_config);
 }
 
 Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
     : TaskBase(name, engine)
-    , mDriver(0)
     , mTimestamper(0)
     , mLastSeq(-1)
 {
-    OutputConfiguration default_config;
-    default_config.coordinate_system = INSTRUMENT;
-    default_config.use_attitude = true;
-    default_config.use_3beam_solution = true;
-    default_config.use_bin_mapping = false;
-    _output_configuration.set(default_config);
 }
 
 Task::~Task()
@@ -47,33 +34,39 @@ Task::~Task()
 
 bool Task::configureHook()
 {
-    delete mDriver;
-    mDriver = new dvl_teledyne::Driver;
-    mDriver->setReadTimeout(_io_read_timeout.get());
-    mDriver->setWriteTimeout(_io_write_timeout.get());
+    std::unique_ptr<dvl_teledyne::Driver> driver(new dvl_teledyne::Driver);
+
+    iodrivers_base::ConfigureGuard guard(this);
     if (!_io_port.get().empty())
+        driver->openURI(_io_port.get());
+    setDriver(driver.get());
+
+    if (! TaskBase::configureHook())
+        return false;
+
+    // Driver Configuration
+    if (driver->isValid())
     {
-        mDriver->open(_io_port.get());
-        mDriver->setConfigurationMode();
+        driver->setReadTimeout(_io_read_timeout.get());
+        driver->setWriteTimeout(_io_write_timeout.get());
+        driver->setConfigurationMode();
 
         // Send the configuration first, so that it gets overriden in the config
         // file (if people want to do it in the config file)
-        mDriver->setOutputConfiguration(_output_configuration.get());
+        driver->applyConfig(_config.get());
 
         // We can configure only if in direct access mode, i.e. send the file
         // only if _io_port is set
         if (!_config_file.get().empty())
-            mDriver->sendConfigurationFile(_config_file.get());
+            driver->sendConfigurationFile(_config_file.get());
     }
 
     delete mTimestamper;
     mTimestamper = new aggregator::TimestampEstimator(
             base::Time::fromSeconds(100),base::Time::fromSeconds(1));
 
-    setDriver(mDriver);
-
-    if (! TaskBase::configureHook())
-        return false;
+    mDriver = move(driver);
+    guard.commit();
     return true;
 }
 bool Task::startHook()
@@ -211,8 +204,9 @@ void Task::stopHook()
     TaskBase::stopHook();
 }
 
-// void Task::cleanupHook()
-// {
-//     TaskBase::cleanupHook();
-// }
+void Task::cleanupHook()
+{
+    TaskBase::cleanupHook();
+    mDriver.reset();
+}
 
